@@ -10,13 +10,13 @@ file=$1
 # Export diagram to plain XML
 drawio --export --format xml --uncompressed "$file.drawio"
 
-# Count how many pages based on <diagram element>
-count=$(grep -o "<diagram" "$file.xml" | wc -l)
+# Use xmllint to extract the name attribute of all diagram elements
+pages=($(xmllint --xpath "//diagram/@name" "$file.xml" 2>/dev/null | sed -e 's/ name=//g' -e 's/\"//g'))
 
-# Export each page as an PDF
-# use --embed-diagram to include in each PDF the complete drawio diagrams.
-for ((i = 0 ; i <= ${count}-1; i++)); do
-  drawio --export --page-index $i --output "$file-$i.pdf" "$file.drawio"
+i=0
+for page in "${pages[@]}"; do    
+    drawio --export --page-index $i --output "$file-$page.pdf" "$file.drawio"
+    ((i=i+1))    
 done
 
 # remove the tmp xml file
